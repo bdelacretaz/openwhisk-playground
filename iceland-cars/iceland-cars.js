@@ -2,19 +2,32 @@
 var request = require('request')
 
 function main (params) {
-    
+
   // Icelandic Web Services FTW! See http://docs.apis.is    
   var serviceUrl = 'https://apis.is/car'
-  var defaultCarNumber = 'aa120'
-  var carNumber = params.carId ? params.carId : defaultCarNumber
-    
+
+  // No car number? Output a form
+  if(!params || !params.carNumber) {
+    return (
+      {
+        // ...yes there are better ways to generate HTML...
+        body : `<html><body>
+          <form>
+            Car number:<input type='text' name='carNumber' value='aa120' />
+            <input type="submit" />
+          </form>
+          </body></html>`
+      })
+  }
+
+  // Got a car number,  query the apis.is service    
   var options = {
     url: serviceUrl,
-    qs: {number :  carNumber },
+    qs: {number :  params.carNumber },
     json: true
   }
   
-  console.log(`Using ${serviceUrl} to get info about car ${carNumber}`)
+  console.log(`Using ${serviceUrl} to get info about car ${params.carNumber}`)
   
   return new Promise(function (resolve, reject) {
     request(options, function (err, resp) {
@@ -41,5 +54,5 @@ function main (params) {
 }
 
 // This is for command-line testing
-// like node -e "require('./iceland-cars.js').main({carId:'aa151'})"
+// like node -e "require('./iceland-cars.js').main({carNumber:'aa151'})"
 module.exports.main = main

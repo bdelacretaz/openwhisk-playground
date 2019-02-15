@@ -13,7 +13,7 @@ Docs:
  
 Test as follows, on an OpenWhisk setup:
 
-    $ wsk -i action create car iceland-cars.js --web true
+    $ wsk -i action update car iceland-cars.js --web true
     ok: created action car
     
     $ export URL=$(wsk -i action get car --url | grep http)
@@ -21,7 +21,7 @@ Test as follows, on an OpenWhisk setup:
     # Known good prefixes: aa02*, aa03*, aa12*
     $ export prefix=aa12
     
-    $ for i in 1 2 3 4 5 6 7 8 9; do export carId=$prefix$i ; curl -k "$URL?carId=$carId" ; echo ; done
+    $ for i in 1 2 3 4 5 6 7 8 9; do export carNumber=$prefix$i ; curl -k "$URL?carNumber=$carNumber" ; echo ; done
     According to https://apis.is/car the car having number AA121 is a FORD - LTD (Brúnn)
     According to https://apis.is/car the car having number AA122 is a LADA - 2105 (Hvítur)
     ...
