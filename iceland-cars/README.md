@@ -13,7 +13,7 @@ Docs:
  
 Test as follows, on an OpenWhisk setup:
 
-    $ wsk -i action create car car.js --web true
+    $ wsk -i action create car iceland-cars.js --web true
     ok: created action car
     
     $ export URL=$(wsk -i action get car --url | grep http)
