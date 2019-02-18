@@ -8,6 +8,7 @@ function main (params) {
 
   // No car number? Output a form
   if(!params || !params.carNumber) {
+    console.log("No carNumber param supplied, showing form")
     return (
       {
         // ...yes there are better ways to generate HTML...
