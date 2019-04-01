@@ -12,7 +12,7 @@ To build this use:
     
 And if you have a local Redis setup you can test with
 
-    node -e "require('./continuations.js').main()"    
+    node -e 'require("./continuations.js").main({host:"localhost", port:6379})'
     
 Test as follows, on an OpenWhisk setup:
 
