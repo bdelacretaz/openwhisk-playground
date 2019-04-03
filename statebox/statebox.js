@@ -5,7 +5,7 @@
 //
 const Statebox = require('@wmfs/statebox')
 const statebox = new Statebox({})
-const VERSION = "1.04"
+const VERSION = "1.05"
 
 const main = async function(params) {
 
@@ -39,10 +39,13 @@ const main = async function(params) {
     },
     sendResponse: class SendResponse {
       run(event, context) {
+        event.elapsedMsec = new Date() - startTime
+
         console.log(`Reached end state, sending response`)
         console.log("\n*** CONTEXT ***")
         console.log(context);
         console.log("\n*** EVENT ***")
+
         console.log(event)
         event.success(event)
       }
@@ -107,7 +110,6 @@ const main = async function(params) {
             number2: 2
           },
           operator: operator,
-          elapsedMsec: new Date() - startTime,
           success: function(data) {
               return resolve( { body:data } )
           }
