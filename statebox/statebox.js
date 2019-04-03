@@ -95,6 +95,7 @@ const main = async function(params) {
   // ----------------------------------------
   return new Promise(async function (resolve, reject) {
       const executioner = await statebox.startExecution({
+          version: '1.01',
           numbers: {
             number1: 44,
             number2: 2
@@ -112,7 +113,7 @@ const main = async function(params) {
 }
 
 if (require.main === module) {
-  main();
+    main({operator:process.argv[2]});
 }
 
 module.exports.main = main

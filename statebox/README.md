@@ -6,7 +6,7 @@ Experimenting with https://github.com/wmfs/statebox in an OpenWhisk environment.
 To test this locally use:
 
     npm install
-    node -e 'require("./statebox.js").main({operator:"plus"})'
+    node statebox.js plus
     
 Test as follows, on an OpenWhisk setup:
 
