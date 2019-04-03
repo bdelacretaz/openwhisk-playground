@@ -7,6 +7,16 @@ const Statebox = require('@wmfs/statebox')
 const statebox = new Statebox({})
 const VERSION = "1.07"
 
+// Get suspend data, what must be saved
+// to restart the state machine after suspending
+function getSuspendData(event, context) {
+    return {
+        data: event,
+        restartAt: context.task.definition.Next,
+        stateMachine: context.task.stateMachine.definition
+    }
+}
+
 // State machine definition
 // TODO should be provided as input to this function
 const STATE_MACHINE = {
@@ -26,6 +36,11 @@ const STATE_MACHINE = {
             InputPath: '$.values',
             ResultPath: '$.values.value',
             Resource: 'module:square',
+            Next: 'Suspend'
+          },
+          Suspend: {
+            Type: 'Task',
+            Resource: 'module:suspend',
             Next: 'C'
           },
           C: {
@@ -60,6 +75,13 @@ const MODULE_RESOURCES = {
         context.sendTaskSuccess(event.value * event.value)
       }
     },
+    suspend: class Suspend {
+      run(event, context) {
+        console.log("\nSUSPEND DATA:")
+        console.log(JSON.stringify(getSuspendData(event, context), null, 2))
+        context.sendTaskSuccess()
+      }
+    },
     sendResponse: class SendResponse {
       run(event, context) {
         event.elapsedMsec = new Date() - event.startTime
@@ -82,7 +104,7 @@ const main = async function(params) {
     params = params ? params : {}
     var inputValue = params.input ? parseInt(params.input) : 1;
     
-    // Create module resources
+    // Create module resources and run state machine
     await statebox.ready
     statebox.createModuleResources(MODULE_RESOURCES)
 
@@ -96,22 +118,20 @@ const main = async function(params) {
     // and send response as the last step
     // TODO need better error handling
     return new Promise(async function (resolve, reject) {
-      statebox.startExecution({
-          version: VERSION,
-          startTime: START_TIME,
-          values: {
-              start : inputValue,
-              value : inputValue
-          },
-          success: function(data) {
-              return resolve( { body:data } )
-          }
-        }, // input
-        'incsquare', // state machine name
-        {} // options
-      )
-  })
-  
+        const stateMachineInput = {
+            version: VERSION,
+            startTime: START_TIME,
+            values: {
+                start : inputValue,
+                value : inputValue
+            },
+            success: function(data) {
+                return resolve( { body:data } )
+            }
+        }
+
+        statebox.startExecution( stateMachineInput, 'incsquare', {} )
+    })
 }
 
 if (require.main === module) {
