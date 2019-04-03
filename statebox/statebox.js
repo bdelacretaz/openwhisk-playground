@@ -1,6 +1,7 @@
 // Statebox example based on https://github.com/wmfs/statebox
 const Statebox = require('@wmfs/statebox')
 const statebox = new Statebox({})
+const VERSION = "1.02"
 
 const main = async function(params) {
 
@@ -94,8 +95,8 @@ const main = async function(params) {
   // TODO need better error handling
   // ----------------------------------------
   return new Promise(async function (resolve, reject) {
-      const executioner = await statebox.startExecution({
-          version: '1.01',
+      statebox.startExecution({
+          version: VERSION,
           numbers: {
             number1: 44,
             number2: 2
