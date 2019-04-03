@@ -1,10 +1,15 @@
 // Statebox example based on https://github.com/wmfs/statebox
+//
+// Executes an Amazon States Langage state machine, defined inline for now
+// See https://states-language.net/spec.html
+//
 const Statebox = require('@wmfs/statebox')
 const statebox = new Statebox({})
-const VERSION = "1.02"
+const VERSION = "1.04"
 
 const main = async function(params) {
 
+    const startTime = new Date();
     params = params ? params : {}
     var operator = params.operator ? params.operator : "minus";
     
@@ -102,6 +107,7 @@ const main = async function(params) {
             number2: 2
           },
           operator: operator,
+          elapsedMsec: new Date() - startTime,
           success: function(data) {
               return resolve( { body:data } )
           }
