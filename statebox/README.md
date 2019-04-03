@@ -6,7 +6,7 @@ Experimenting with https://github.com/wmfs/statebox in an OpenWhisk environment.
 To test this locally use:
 
     npm install
-    node statebox.js plus
+    node statebox.js 5
     
 Test as follows, on an OpenWhisk setup:
 
@@ -16,7 +16,7 @@ Test as follows, on an OpenWhisk setup:
 
     $ export URL=$(wsk -i action get statebox --url | grep http)
 
-    $ curl -L -k "$URL?operator=plus"
+    $ curl -L -k "$URL?input=5"
 
 And then to see what happened:
 

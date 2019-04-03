@@ -5,86 +5,34 @@
 //
 const Statebox = require('@wmfs/statebox')
 const statebox = new Statebox({})
-const VERSION = "1.05"
+const VERSION = "1.07"
 
-const main = async function(params) {
-
-    const startTime = new Date();
-    params = params ? params : {}
-    var operator = params.operator ? params.operator : "minus";
-    
-  // STEP 1:
-  // Create some 'module' resources (i.e. Javascript
-  // classes with 'run' and optional 'init' methods)
-  // that state machines can then refer to...
-  // -------------------------------------------------
-  await statebox.ready
-  statebox.createModuleResources({
-    // Simple module to add two numbers together
-    add: class Add {
-      run(event, context) {
-        context.sendTaskSuccess(event.number1 + event.number2)
-      }
-    },
-    // Simple module to subtract one number from another
-    subtract: class Subtract {
-      // Init methods are optional, but all allow
-      // resource-instances to be configured...
-      init(resourceConfig, env, callback) {
-        callback(null)
-      }
-      run(event, context) {
-        context.sendTaskSuccess(event.number1 - event.number2)
-      }
-    },
-    sendResponse: class SendResponse {
-      run(event, context) {
-        event.elapsedMsec = new Date() - startTime
-
-        console.log(`Reached end state, sending response`)
-        console.log("\n*** CONTEXT ***")
-        console.log(context);
-        console.log("\n*** EVENT ***")
-
-        console.log(event)
-        event.success(event)
-      }
-    },
-  })
-
-  // STEP 2:
-  // Next create a new 'calculator' state
-  // machine using Amazon States Language...
-  // ---------------------------------------
-  await statebox.createStateMachines({
-      'calculator': {
-        Comment: 'A simple calculator',
-        StartAt: 'OperatorChoice',
+// State machine definition
+// TODO should be provided as input to this function
+const STATE_MACHINE = {
+      'incsquare': {
+        Comment: 'Increment and square a value',
+        StartAt: 'A',
         States: {
-          OperatorChoice: {
-            Type: 'Choice',
-            Choices: [{
-              Variable: '$.operator',
-              StringEquals: 'plus',
-              Next: 'Add'
-            }, {
-              Variable: '$.operator',
-              StringEquals: 'minus',
-              Next: 'Subtract'
-            }]
-          },
-          Add: {
+          A: {
             Type: 'Task',
-            InputPath: '$.numbers',
-            Resource: 'module:add', // See createModuleResources()
-            ResultPath: '$.result',
-            Next: 'SendResponse'
+            InputPath: '$.values',
+            ResultPath: '$.values.value',
+            Resource: 'module:increment',
+            Next: 'B'
           },
-          Subtract: {
+          B: {
             Type: 'Task',
-            InputPath: '$.numbers',
-            Resource: 'module:subtract',
-            ResultPath: '$.result',
+            InputPath: '$.values',
+            ResultPath: '$.values.value',
+            Resource: 'module:square',
+            Next: 'C'
+          },
+          C: {
+            Type: 'Task',
+            InputPath: '$.values',
+            ResultPath: '$.values.value',
+            Resource: 'module:increment',
             Next: 'SendResponse'
           },
           SendResponse: {
@@ -94,27 +42,72 @@ const main = async function(params) {
           }
         }
       }
-    }, {}, // 'env': An environment/context/sandbox
-  )
+    }
+    
+// Module resources are Javascript classes with 'run' 
+// and optional 'init' methods) that state machines 
+// can use for Task states
+const MODULE_RESOURCES = {
+    increment: class Increment {
+      run(event, context) {
+        console.log(`increment ${event.value}`)
+        context.sendTaskSuccess(event.value + 1)
+      }
+    },
+    square: class Square {
+      run(event, context) {
+        console.log(`square ${event.value}`)
+        context.sendTaskSuccess(event.value * event.value)
+      }
+    },
+    sendResponse: class SendResponse {
+      run(event, context) {
+        event.elapsedMsec = new Date() - event.startTime
+
+        console.log(`Reached end state, sending response`)
+        console.log("\n*** CONTEXT ***")
+        console.log(context);
+        console.log("\n*** EVENT ***")
+
+        console.log(event)
+        event.success(event)
+      }
+    }
+  }     
+
+// OpenWhisk action code
+const main = async function(params) {
+
+    const START_TIME = new Date()
+    params = params ? params : {}
+    var inputValue = params.input ? parseInt(params.input) : 1;
+    
+    // Create module resources
+    await statebox.ready
+    statebox.createModuleResources(MODULE_RESOURCES)
+
+    // Create the state machine
+    {
+        const env = {} // An environment/context/sandbox
+        await statebox.createStateMachines(STATE_MACHINE, env)    
+    }
   
-  // STEP 3:
-  // Start a new execution on a state machine
-  // and send response as the last step
-  // TODO need better error handling
-  // ----------------------------------------
-  return new Promise(async function (resolve, reject) {
+    // Start a new execution on a state machine
+    // and send response as the last step
+    // TODO need better error handling
+    return new Promise(async function (resolve, reject) {
       statebox.startExecution({
           version: VERSION,
-          numbers: {
-            number1: 44,
-            number2: 2
+          startTime: START_TIME,
+          values: {
+              start : inputValue,
+              value : inputValue
           },
-          operator: operator,
           success: function(data) {
               return resolve( { body:data } )
           }
         }, // input
-        'calculator', // state machine name
+        'incsquare', // state machine name
         {} // options
       )
   })
@@ -122,7 +115,7 @@ const main = async function(params) {
 }
 
 if (require.main === module) {
-    main({operator:process.argv[2]});
+    main({input:process.argv[2]});
 }
 
 module.exports.main = main
