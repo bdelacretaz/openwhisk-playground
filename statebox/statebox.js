@@ -5,7 +5,7 @@ const statebox = new Statebox({})
 const main = async function(params) {
 
     params = params ? params : {}
-    var operator = params.operator ? params.operator : "-";
+    var operator = params.operator ? params.operator : "minus";
     
   // STEP 1:
   // Create some 'module' resources (i.e. Javascript
@@ -31,13 +31,14 @@ const main = async function(params) {
         context.sendTaskSuccess(event.number1 - event.number2)
       }
     },
-    report: class Report {
+    sendResponse: class SendResponse {
       run(event, context) {
-        console.log(`Reached end state`)
+        console.log(`Reached end state, sending response`)
         console.log("\n*** CONTEXT ***")
         console.log(context);
         console.log("\n*** EVENT ***")
         console.log(event)
+        event.success(event)
       }
     },
   })
@@ -55,11 +56,11 @@ const main = async function(params) {
             Type: 'Choice',
             Choices: [{
               Variable: '$.operator',
-              StringEquals: '+',
+              StringEquals: 'plus',
               Next: 'Add'
             }, {
               Variable: '$.operator',
-              StringEquals: '-',
+              StringEquals: 'minus',
               Next: 'Subtract'
             }]
           },
@@ -68,18 +69,18 @@ const main = async function(params) {
             InputPath: '$.numbers',
             Resource: 'module:add', // See createModuleResources()
             ResultPath: '$.result',
-            Next: 'Report'
+            Next: 'SendResponse'
           },
           Subtract: {
             Type: 'Task',
             InputPath: '$.numbers',
             Resource: 'module:subtract',
             ResultPath: '$.result',
-            Next: 'Report'
+            Next: 'SendResponse'
           },
-          Report: {
+          SendResponse: {
             Type: 'Task',
-            Resource: 'module:report',
+            Resource: 'module:sendResponse',
             End: true
           }
         }
@@ -89,17 +90,25 @@ const main = async function(params) {
   
   // STEP 3:
   // Start a new execution on a state machine
+  // and send response as the last step
+  // TODO need better error handling
   // ----------------------------------------
-  const executioner = await statebox.startExecution({
-      numbers: {
-        number1: 44,
-        number2: 2
-      },
-      operator: operator
-    }, // input
-    'calculator', // state machine name
-    {} // options
-  )
+  return new Promise(async function (resolve, reject) {
+      const executioner = await statebox.startExecution({
+          numbers: {
+            number1: 44,
+            number2: 2
+          },
+          operator: operator,
+          success: function(data) {
+              return resolve( { body:data } )
+          }
+        }, // input
+        'calculator', // state machine name
+        {} // options
+      )
+  })
+  
 }
 
 if (require.main === module) {
