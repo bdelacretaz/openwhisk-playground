@@ -10,8 +10,8 @@ To test this locally use:
     
 Test as follows, on an OpenWhisk setup:
 
-    $ zip -r action.zip package.json statebox.js node_modules
-    $ wsk -i action update statebox action.zip --web true --kind nodejs:10
+    $ zip -r action.zip package.json *.js node_modules
+    $ wsk -i action update statebox action.zip --web true --param host $REDIS_HOST --param port $REDIS_PORT --kind nodejs:10
     ok: created action statebox
 
     $ export URL=$(wsk -i action get statebox --url | grep http)

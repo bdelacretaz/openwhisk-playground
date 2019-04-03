@@ -3,20 +3,26 @@
 // Executes an Amazon States Langage state machine, defined inline for now
 // See https://states-language.net/spec.html
 //
+
+'use strict'
+
 const Statebox = require('@wmfs/statebox')
 const statebox = new Statebox({})
 const StateStore = require('./state-store.js')
-const store = new StateStore({})
+var store
 const EXPIRATION_SECONDS = 300
 const VERSION = "1.08"
 
 // Get suspend data, what must be saved
 // to restart the state machine after suspending
 function getSuspendData(event, context) {
+    context.task.stateMachine.definition.StartAt = context.task.definition.Next
+    var machine = {}
+    machine[context.task.stateMachine.name] = context.task.stateMachine.definition
     return {
         data: event,
         restartAt: context.task.definition.Next,
-        stateMachine: context.task.stateMachine.definition
+        stateMachine: machine
     }
 }
 
@@ -97,10 +103,7 @@ const MODULE_RESOURCES = {
         event.elapsedMsec = new Date() - event.startTime
 
         console.log(`Reached end state, sending response`)
-        console.log("\n*** CONTEXT ***")
-        console.log(context);
         console.log("\n*** EVENT ***")
-
         console.log(event)
         event.success(event)
       }
@@ -113,6 +116,10 @@ const main = async function(params) {
     const START_TIME = new Date()
     params = params ? params : {}
     var inputValue = params.input ? parseInt(params.input) : 1;
+    var host = params.host ? params.host : "localhost";
+    var port = params.port ? params.port : 6379;
+    
+    store = new StateStore({host:host, port:port})
     
     // Create module resources and run state machine
     await statebox.ready
@@ -121,9 +128,23 @@ const main = async function(params) {
     // Create the state machine
     {
         const env = {} // An environment/context/sandbox
-        await statebox.createStateMachines(STATE_MACHINE, env)    
+        
+        if(params.continuation && params.continuation > 0) {
+            store.get(params.continuation, await async function(err, data) {
+                console.log(`CONTINUE FROM ${JSON.stringify(data.stateMachine, null, 2)}`)
+                await statebox.createStateMachines(data.stateMachine, env)    
+                console.log("Restart machine created")
+                // TODO hack
+                inputValue = data.data.values.value
+            })
+        } else {
+          await statebox.createStateMachines(STATE_MACHINE, env)    
+        }
     }
-  
+    
+    // TODO hack hack need to the async stuff right
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     // Start a new execution on a state machine
     // and send response as the last step
     // TODO need better error handling
@@ -131,6 +152,8 @@ const main = async function(params) {
         const stateMachineInput = {
             version: VERSION,
             startTime: START_TIME,
+            host: host,
+            port: port,
             values: {
                 start : inputValue,
                 value : inputValue
@@ -140,13 +163,20 @@ const main = async function(params) {
                 return resolve( { body:data } )
             }
         }
-
-        statebox.startExecution( stateMachineInput, 'incsquare', {} )
+        
+        const name = 'incsquare'
+        console.log("Starting state machine")
+        statebox.startExecution( stateMachineInput, name, {} )
     })
 }
 
 if (require.main === module) {
-    main({input:process.argv[2]});
+    main({
+        input:process.argv[2], 
+        continuation:process.argv[3],
+        host:process.argv[4],
+        port:process.argv[5]
+    });
 }
 
 module.exports.main = main

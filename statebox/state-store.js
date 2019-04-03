@@ -32,11 +32,11 @@ class StateStore {
         )
     }
     
-    close() {
+    async close() {
       this.client.quit()
     }
 
-    put(data, expirationSeconds, callback) {
+    async put(data, expirationSeconds, callback) {
         const redis = this.client
         redis.incr(ID_KEY, function(err, key) {
             console.log(`Saving continuation ${key}, expires in ${expirationSeconds} seconds`)
@@ -46,7 +46,7 @@ class StateStore {
         });
     }
     
-    get(key, callback) {
+    async get(key, callback) {
         this.client.get(key, (err, data) => { callback(err, JSON.parse(data)) })
     }
     
