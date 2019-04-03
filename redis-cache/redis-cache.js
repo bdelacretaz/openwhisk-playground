@@ -87,5 +87,5 @@ function main (params) {
 }
  
 // This is for command-line testing
-// like node -e 'require("./continuations.js").main({host:"localhost", port:6379})'
+// like node -e 'require("./redis-cache.js").main({host:"localhost", port:6379})'
 module.exports.main = main

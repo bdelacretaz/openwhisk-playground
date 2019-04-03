@@ -1,8 +1,8 @@
 {
-  "name": "openwhisk-continuations",
+  "name": "openwhisk-redis-cache",
   "version": "1.0.0",
-  "description": "Experimenting with (web) continuations for OpenWhisk",
-  "main": "continuations.js",
+  "description": "Experimenting with a Redis cache for OpenWhisk",
+  "main": "redis-cache.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
