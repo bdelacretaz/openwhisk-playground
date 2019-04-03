@@ -5,7 +5,10 @@
 //
 const Statebox = require('@wmfs/statebox')
 const statebox = new Statebox({})
-const VERSION = "1.07"
+const StateStore = require('./state-store.js')
+const store = new StateStore({})
+const EXPIRATION_SECONDS = 300
+const VERSION = "1.08"
 
 // Get suspend data, what must be saved
 // to restart the state machine after suspending
@@ -77,9 +80,16 @@ const MODULE_RESOURCES = {
     },
     suspend: class Suspend {
       run(event, context) {
-        console.log("\nSUSPEND DATA:")
-        console.log(JSON.stringify(getSuspendData(event, context), null, 2))
-        context.sendTaskSuccess()
+        var suspendData =  getSuspendData(event, context)
+        store.put(suspendData, EXPIRATION_SECONDS, function(key) { 
+          event._CONTINUATION = key
+          console.log(`\nCONTINUATION DATA for #${key}, loaded from store:`)
+          store.get(key, function(err, data) {
+            console.log(JSON.stringify(data, null, 2))
+            // Not calling context.sendTaskSuccess stops here...  
+            event.success(event)
+          })
+        })
       }
     },
     sendResponse: class SendResponse {
@@ -126,6 +136,7 @@ const main = async function(params) {
                 value : inputValue
             },
             success: function(data) {
+                store.close()
                 return resolve( { body:data } )
             }
         }
