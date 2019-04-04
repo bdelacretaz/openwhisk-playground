@@ -19,11 +19,11 @@ class StateStore {
             host: options.host,
             port: options.port,
             retry_strategy: function (options) {
-                if (options.total_retry_time > 2 * 1000) {
-                    return _mkError('Redis retry time exhausted');
+                if (options.total_retry_time > 5 * 1000) {
+                    throw 'Redis retry time exhausted'
                 }
                 if (options.attempt > 10) {
-                    return _mkError('Redis max attempts exhausted');
+                    throw 'Redis max attempts exhausted'
                 }
                 // reconnect after semi-random time
                 return Math.min(options.attempt * 100, 3000);
@@ -36,23 +36,29 @@ class StateStore {
       this.client.quit()
     }
 
-    async put(data, expirationSeconds, callback) {
-        const redis = this.client
-        redis.incr(ID_KEY, function(err, key) {
-            console.log(`Saving continuation ${key}, expires in ${expirationSeconds} seconds`)
-            data._CONTINUATION = key
-            redis.setex(key, expirationSeconds, JSON.stringify(data))
-            callback(key)
-        });
+    async put(data, expirationSeconds) {
+        const client = this.client
+        return new Promise(async function (resolve, reject) {
+            client.incr(ID_KEY, function(err, key) {
+                console.log(`Saving continuation ${key}, expires in ${expirationSeconds} seconds`)
+                data._CONTINUATION = key
+                client.setex(key, expirationSeconds, JSON.stringify(data))
+                resolve(key)
+            });
+        })
     }
     
     async get(key, callback) {
-        this.client.get(key, (err, data) => { callback(err, JSON.parse(data)) })
-    }
-    
-    _mkError(msg) {
-        console.log(msg);
-        return new Error(msg);          
+        const client = this.client
+        return new Promise(async function (resolve, reject) {
+            client.get(key, (err, data) => { 
+                if(err) {
+                    reject(err)
+                } else {
+                    resolve({key : key, data:JSON.parse(data)})
+                }
+            })
+        })
     }
 } 
 

@@ -86,16 +86,18 @@ const MODULE_RESOURCES = {
     },
     suspend: class Suspend {
       run(event, context) {
-        var suspendData =  getSuspendData(event, context)
-        store.put(suspendData, EXPIRATION_SECONDS, function(key) { 
-          event._CONTINUATION = key
-          console.log(`\nCONTINUATION DATA for #${key}, loaded from store:`)
-          store.get(key, function(err, data) {
-            console.log(JSON.stringify(data, null, 2))
-            // Not calling context.sendTaskSuccess stops here...  
-            event.success(event)
-          })
-        })
+        const suspendData =  getSuspendData(event, context)
+        store.put(suspendData, EXPIRATION_SECONDS)
+          .then(key => { event._CONTINUATION = key ; return key })
+          .then(key => { return store.get(key) })
+          .then(result => {
+              console.log(`\nCONTINUATION DATA for #${result.key}, loaded from store as ${result.data}`)
+              console.log(JSON.stringify(result.data, null, 2))
+              
+              // Not calling context.sendTaskSuccess stops the state machine
+              // TODO is that ok?
+              event.success(event)
+            })
       }
     },
     sendResponse: class SendResponse {
@@ -113,13 +115,14 @@ const MODULE_RESOURCES = {
 // OpenWhisk action code
 const main = async function(params) {
 
-    const START_TIME = new Date()
+    var input = { values: {}, redis: {} }
+    input.startTime = new Date()
     params = params ? params : {}
-    var inputValue = params.input ? parseInt(params.input) : 1;
-    var host = params.host ? params.host : "localhost";
-    var port = params.port ? params.port : 6379;
+    input.values.input = params.input ? parseInt(params.input) : 1;
+    input.redis.host = params.host ? params.host : "localhost";
+    input.redis.prt = params.port ? params.port : 6379;
     
-    store = new StateStore({host:host, port:port})
+    store = new StateStore({host:input.redis.host, port:input.redis.port})
     
     // Create module resources and run state machine
     await statebox.ready
@@ -130,33 +133,32 @@ const main = async function(params) {
         const env = {} // An environment/context/sandbox
         
         if(params.continuation && params.continuation > 0) {
-            store.get(params.continuation, await async function(err, data) {
-                console.log(`CONTINUE FROM ${JSON.stringify(data.stateMachine, null, 2)}`)
-                await statebox.createStateMachines(data.stateMachine, env)    
-                console.log("Restart machine created")
-                // TODO hack
-                inputValue = data.data.values.value
+            await store.get(params.continuation)
+            .then(async function(data) {
+                console.log(`CONTINUE FROM ${JSON.stringify(data, null, 2)}`)
+                input.stateMachine = data.data.stateMachine
+                input.values.input = data.data.data.values.value
             })
         } else {
-          await statebox.createStateMachines(STATE_MACHINE, env)    
+            input.stateMachine = STATE_MACHINE
         }
     }
     
-    // TODO hack hack need to the async stuff right
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log(`Creating state machine ${input.stateMachine}`)
+    await statebox.createStateMachines(input.stateMachine, {})
     
     // Start a new execution on a state machine
     // and send response as the last step
     // TODO need better error handling
-    var result = new Promise(async function (resolve, reject) {
+    var result = new Promise((resolve, reject) => {
         const stateMachineInput = {
             version: VERSION,
-            startTime: START_TIME,
-            host: host,
-            port: port,
+            startTime: input.startTime,
+            host: input.redis.host,
+            port: input.redis.port,
             values: {
-                start : inputValue,
-                value : inputValue
+                start : input.values.input,
+                value : input.values.input
             },
             success: function(data) {
                 store.close()
