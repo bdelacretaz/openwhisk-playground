@@ -18,6 +18,7 @@
   "homepage": "https://github.com/bdelacretaz/openwhisk-playground#readme",
   "dependencies": {
     "@wmfs/statebox": "^1.48.1",
-    "redis": "^2.8.0"
+    "redis": "^2.8.0",
+    "uuidv4": "^4.0.0"
   }
 }

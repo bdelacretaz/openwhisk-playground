@@ -8,6 +8,7 @@
 
 const Statebox = require('@wmfs/statebox')
 const statebox = new Statebox({})
+const uuidv4 = require('uuid/v4');
 const StateStore = require('./state-store.js')
 var store
 const EXPIRATION_SECONDS = 300
@@ -136,6 +137,11 @@ const main = async function(params) {
     } else {
         input.stateMachine = STATE_MACHINE
     }
+    
+    // Use a unique state machine name for each run
+    var m2 = {}
+    m2['M-' + uuidv4()] = input.stateMachine[Object.keys(input.stateMachine)[0]]
+    input.stateMachine = m2
     
     const stateMachineName = Object.keys(input.stateMachine)[0]
     console.log(`Creating state machine ${stateMachineName}`)
