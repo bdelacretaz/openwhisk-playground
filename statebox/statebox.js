@@ -132,7 +132,7 @@ const main = async function(params) {
             console.log(`Restarting from continuation ${params.continuation}`)
             await store.get(params.continuation)
             .then(data => {
-                if(!data.data) throw `Continuation not found or expired: ${params.continuation}`
+                if(!data.data) reject(`Continuation not found or expired: ${params.continuation}`)
                 console.log(`CONTINUE FROM ${JSON.stringify(data, null, 2)}`)
                 input.stateMachine = data.data.stateMachine
                 input.values.input = data.data.data.values.value
