@@ -86,6 +86,7 @@ const MODULE_RESOURCES = {
     },
     suspend: class Suspend {
       run(event, context) {
+        console.log("Suspending state machine")
         const suspendData =  getSuspendData(event, context)
         store.put(suspendData, EXPIRATION_SECONDS)
           .then(key => { event._CONTINUATION = key ; console.log(`KEY ${key}`); return store.get(key) })
@@ -115,7 +116,7 @@ const main = async function(params) {
     params = params ? params : {}
     input.values.input = params.input ? parseInt(params.input) : 1;
     input.redis.host = params.host ? params.host : "localhost";
-    input.redis.prt = params.port ? params.port : 6379;
+    input.redis.port = params.port ? params.port : 6379;
     
     store = new StateStore({host:input.redis.host, port:input.redis.port})
     
