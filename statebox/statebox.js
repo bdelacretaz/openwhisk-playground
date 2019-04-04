@@ -75,22 +75,22 @@ const STATE_MACHINE = {
 const MODULE_RESOURCES = {
     increment: class Increment {
       run(event, context) {
-        console.log(`increment ${event.value}`)
+        console.log(`RES:increment ${event.value}`)
         context.sendTaskSuccess(event.value + 1)
       }
     },
     square: class Square {
       run(event, context) {
-        console.log(`square ${event.value}`)
+        console.log(`RES:square ${event.value}`)
         context.sendTaskSuccess(event.value * event.value)
       }
     },
     suspend: class Suspend {
       run(event, context) {
-        console.log("Suspending state machine")
+        console.log("RES:Suspending state machine")
         const suspendData =  getSuspendData(event, context)
         store.put(suspendData, EXPIRATION_SECONDS)
-          .then(key => { event._CONTINUATION = key ; console.log(`KEY ${key}`); return store.get(key) })
+          .then(key => { event._CONTINUATION = key ; return store.get(key) })
           .then(result => {
               console.log(`\nCONTINUATION DATA for #${result.key}, loaded from store as ${result.data}`)
               console.log(JSON.stringify(result.data, null, 2))
@@ -102,10 +102,11 @@ const MODULE_RESOURCES = {
       }
     },
     sendResponse: class SendResponse {
-      run(event, context) {
-        event.elapsedMsec = new Date() - event.startTime
-        event.success(event)
-      }
+        run(event, context) {
+            console.log(`RES:sendResponse`)
+            event.elapsedMsec = new Date() - event.startTime
+            event.success(event)
+        }
     }
   }     
 
@@ -118,39 +119,38 @@ const main = async function(params) {
     input.values.input = params.input ? parseInt(params.input) : 1;
     input.redis.host = params.host ? params.host : "localhost";
     input.redis.port = params.port ? params.port : 6379;
-    
-    store = new StateStore({host:input.redis.host, port:input.redis.port})
-    
-    // Create module resources and run state machine
-    await statebox.ready
-    await statebox.createModuleResources(MODULE_RESOURCES)
 
-    // Select the state machine
-    if(params.continuation && params.continuation.length > 0) {
-        console.log(`Restarting from continuation ${params.continuation}`)
-        await store.get(params.continuation)
-        .then(data => {
-            console.log(`CONTINUE FROM ${JSON.stringify(data, null, 2)}`)
-            input.stateMachine = data.data.stateMachine
-            input.values.input = data.data.data.values.value
-        })
-    } else {
-        input.stateMachine = STATE_MACHINE
-    }
+    var result = new Promise(async function (resolve, reject) {
+        store = new StateStore({host:input.redis.host, port:input.redis.port})
     
-    // Use a unique state machine name for each run
-    var m2 = {}
-    m2['M-' + uuidv4()] = input.stateMachine[Object.keys(input.stateMachine)[0]]
-    input.stateMachine = m2
+        // Create module resources and run state machine
+        await statebox.ready
+        await statebox.createModuleResources(MODULE_RESOURCES)
+
+        // Select the state machine
+        if(params.continuation && params.continuation.length > 0) {
+            console.log(`Restarting from continuation ${params.continuation}`)
+            await store.get(params.continuation)
+            .then(data => {
+                if(!data.data) throw `Continuation not found or expired: ${params.continuation}`
+                console.log(`CONTINUE FROM ${JSON.stringify(data, null, 2)}`)
+                input.stateMachine = data.data.stateMachine
+                input.values.input = data.data.data.values.value
+            })
+            .catch(e => { reject(e) })
+        } else {
+            input.stateMachine = STATE_MACHINE
+        }
     
-    const stateMachineName = Object.keys(input.stateMachine)[0]
-    console.log(`Creating state machine ${stateMachineName}`)
-    await statebox.createStateMachines(input.stateMachine, {})
+        // Use a unique state machine name for each run
+        var m2 = {}
+        m2['M-' + uuidv4()] = input.stateMachine[Object.keys(input.stateMachine)[0]]
+        input.stateMachine = m2
     
-    // Start a new execution on a state machine
-    // and send response as the last step
-    // TODO need better error handling
-    var result = new Promise((resolve, reject) => {
+        const stateMachineName = Object.keys(input.stateMachine)[0]
+        console.log(`Creating state machine ${stateMachineName}`)
+        await statebox.createStateMachines(input.stateMachine, {})
+
         const stateMachineInput = {
             version: VERSION,
             startTime: input.startTime,
@@ -169,6 +169,7 @@ const main = async function(params) {
 
         console.log(`Starting state machine ${stateMachineName}`)
         statebox.startExecution( stateMachineInput, stateMachineName, {} )
+        .catch(e => { reject(e) })
     })
 
     result.finally(function() {
