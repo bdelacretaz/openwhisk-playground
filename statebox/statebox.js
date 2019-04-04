@@ -157,7 +157,7 @@ const main = async function(params) {
             success: function(data) {
                 console.log(`RESPONSE:`)
                 console.log(data)
-                return resolve( { body:data } )
+                resolve( { body:data } )
             }
         }
 
