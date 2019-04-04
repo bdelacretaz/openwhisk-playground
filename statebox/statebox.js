@@ -128,13 +128,11 @@ const main = async function(params) {
     await statebox.ready
     statebox.createModuleResources(MODULE_RESOURCES)
 
-    // Create the state machine
+    // Select the state machine
     {
-        const env = {} // An environment/context/sandbox
-        
         if(params.continuation && params.continuation > 0) {
             await store.get(params.continuation)
-            .then(async function(data) {
+            .then(data ==> {
                 console.log(`CONTINUE FROM ${JSON.stringify(data, null, 2)}`)
                 input.stateMachine = data.data.stateMachine
                 input.values.input = data.data.data.values.value
