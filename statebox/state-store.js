@@ -33,8 +33,7 @@ class StateStore {
         )
     }
     
-    async nextKey() {
-        //return new Promise(function (resolve, reject) { resolve(uuidv4()) })
+    nextKey() {
         return uuidv4()
     }
     
@@ -45,14 +44,12 @@ class StateStore {
     async put(data, expirationSeconds) {
         console.log(`StateStore.put()`)
         const client = this.client
-        const nextKey = this.nextKey
+        const key = this.nextKey()
         return new Promise(async function (resolve, reject) {
-            nextKey().then(key => {
-                data._CONTINUATION = key
-                client.setex(key, expirationSeconds, JSON.stringify(data))
-                console.log(`Saved continuation ${key}, expires in ${expirationSeconds} seconds`)
-                resolve(key)
-            });
+            data._CONTINUATION = key
+            client.setex(key, expirationSeconds, JSON.stringify(data))
+            console.log(`Saved continuation ${key}, expires in ${expirationSeconds} seconds`)
+            resolve(key)
         })
     }
     
