@@ -12,7 +12,7 @@ const uuidv4 = require('uuid/v4');
 const StateStore = require('./state-store.js')
 var store
 const EXPIRATION_SECONDS = 300
-const VERSION = "1.08"
+const VERSION = "1.09"
 
 // Get suspend data, what must be saved
 // to restart the state machine after suspending
@@ -29,45 +29,47 @@ function getSuspendData(event, context) {
 
 // State machine definition
 // TODO should be provided as input to this function
-const STATE_MACHINE = {
-      'incsquare': {
-        Comment: 'Increment and square a value',
-        StartAt: 'A',
-        States: {
-          A: {
-            Type: 'Task',
-            InputPath: '$.values',
-            ResultPath: '$.values.value',
-            Resource: 'module:increment',
-            Next: 'B'
-          },
-          B: {
-            Type: 'Task',
-            InputPath: '$.values',
-            ResultPath: '$.values.value',
-            Resource: 'module:square',
-            Next: 'Suspend'
-          },
-          Suspend: {
-            Type: 'Task',
-            Resource: 'module:suspend',
-            Next: 'C'
-          },
-          C: {
-            Type: 'Task',
-            InputPath: '$.values',
-            ResultPath: '$.values.value',
-            Resource: 'module:increment',
-            Next: 'SendResponse'
-          },
-          SendResponse: {
-            Type: 'Task',
-            Resource: 'module:sendResponse',
-            End: true
+function defaultStateMachine() {
+    return {
+          'incsquare': {
+            Comment: 'Increment and square a value',
+            StartAt: 'A',
+            States: {
+              A: {
+                Type: 'Task',
+                InputPath: '$.values',
+                ResultPath: '$.values.value',
+                Resource: 'module:increment',
+                Next: 'B'
+              },
+              B: {
+                Type: 'Task',
+                InputPath: '$.values',
+                ResultPath: '$.values.value',
+                Resource: 'module:square',
+                Next: 'Suspend'
+              },
+              Suspend: {
+                Type: 'Task',
+                Resource: 'module:suspend',
+                Next: 'C'
+              },
+              C: {
+                Type: 'Task',
+                InputPath: '$.values',
+                ResultPath: '$.values.value',
+                Resource: 'module:increment',
+                Next: 'SendResponse'
+              },
+              SendResponse: {
+                Type: 'Task',
+                Resource: 'module:sendResponse',
+                End: true
+              }
+            }
           }
-        }
-      }
-    }
+      }   
+}
     
 // Module resources are Javascript classes with 'run' 
 // and optional 'init' methods) that state machines 
@@ -116,7 +118,6 @@ const main = async function(params) {
     var input = { values: {}, redis: {} }
     input.startTime = new Date()
     params = params ? params : {}
-    input.values.input = params.input ? parseInt(params.input) : 1;
     input.redis.host = params.host ? params.host : "localhost";
     input.redis.port = params.port ? params.port : 6379;
 
@@ -135,11 +136,12 @@ const main = async function(params) {
                 if(!data.data) reject(`Continuation not found or expired: ${params.continuation}`)
                 console.log(`CONTINUE FROM ${JSON.stringify(data, null, 2)}`)
                 input.stateMachine = data.data.stateMachine
-                input.values.input = data.data.data.values.value
+                input.values = data.data.data.values
             })
             .catch(e => { reject(e) })
         } else {
-            input.stateMachine = STATE_MACHINE
+            input.values.value = params.input ? parseInt(params.input) : 1;
+            input.stateMachine = defaultStateMachine()
         }
     
         // Use a unique state machine name for each run
@@ -152,22 +154,26 @@ const main = async function(params) {
         await statebox.createStateMachines(input.stateMachine, {})
 
         const stateMachineInput = {
-            version: VERSION,
-            startTime: input.startTime,
-            host: input.redis.host,
-            port: input.redis.port,
-            values: {
+            constants: {
+                version: VERSION,
                 start : input.values.input,
-                value : input.values.input
+                startTime: input.startTime,
+                host: input.redis.host,
+                port: input.redis.port,
             },
+            values: input.values,
             success: function(data) {
                 console.log(`RESPONSE:`)
                 console.log(data)
                 resolve( { body:data } )
             }
         }
+        
+        if(params.continuation) {
+            stateMachineInput.constants.restartedFrom = params.continuation
+        }
 
-        console.log(`Starting state machine ${stateMachineName}`)
+        console.log(`Starting state machine ${stateMachineName} with definition ${JSON.stringify(input.stateMachine, null, 2)}`)
         statebox.startExecution( stateMachineInput, stateMachineName, {} )
         .catch(e => { reject(e) })
     })
