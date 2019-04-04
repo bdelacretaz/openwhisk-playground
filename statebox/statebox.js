@@ -88,8 +88,7 @@ const MODULE_RESOURCES = {
       run(event, context) {
         const suspendData =  getSuspendData(event, context)
         store.put(suspendData, EXPIRATION_SECONDS)
-          .then(key => { event._CONTINUATION = key ; return key })
-          .then(key => { return store.get(key) })
+          .then(key => { event._CONTINUATION = key ; console.log(`KEY ${key}`); return store.get(key) })
           .then(result => {
               console.log(`\nCONTINUATION DATA for #${result.key}, loaded from store as ${result.data}`)
               console.log(JSON.stringify(result.data, null, 2))
@@ -103,10 +102,6 @@ const MODULE_RESOURCES = {
     sendResponse: class SendResponse {
       run(event, context) {
         event.elapsedMsec = new Date() - event.startTime
-
-        console.log(`Reached end state, sending response`)
-        console.log("\n*** EVENT ***")
-        console.log(event)
         event.success(event)
       }
     }
@@ -129,20 +124,20 @@ const main = async function(params) {
     statebox.createModuleResources(MODULE_RESOURCES)
 
     // Select the state machine
-    {
-        if(params.continuation && params.continuation > 0) {
-            await store.get(params.continuation)
-            .then(data ==> {
-                console.log(`CONTINUE FROM ${JSON.stringify(data, null, 2)}`)
-                input.stateMachine = data.data.stateMachine
-                input.values.input = data.data.data.values.value
-            })
-        } else {
-            input.stateMachine = STATE_MACHINE
-        }
+    if(params.continuation && params.continuation.length > 0) {
+        console.log(`Restarting from continuation ${params.continuation}`)
+        await store.get(params.continuation)
+        .then(data => {
+            console.log(`CONTINUE FROM ${JSON.stringify(data, null, 2)}`)
+            input.stateMachine = data.data.stateMachine
+            input.values.input = data.data.data.values.value
+        })
+    } else {
+        input.stateMachine = STATE_MACHINE
     }
     
-    console.log(`Creating state machine ${input.stateMachine}`)
+    const stateMachineName = Object.keys(input.stateMachine)[0]
+    console.log(`Creating state machine ${stateMachineName}`)
     await statebox.createStateMachines(input.stateMachine, {})
     
     // Start a new execution on a state machine
@@ -160,13 +155,14 @@ const main = async function(params) {
             },
             success: function(data) {
                 store.close()
+                console.log(`RESPONSE:`)
+                console.log(data)
                 return resolve( { body:data } )
             }
         }
 
-        const name = 'incsquare'
-        console.log("Starting state machine")
-        statebox.startExecution( stateMachineInput, name, {} )
+        console.log(`Starting state machine ${stateMachineName}`)
+        statebox.startExecution( stateMachineInput, stateMachineName, {} )
     })
 
     result.finally(function() {

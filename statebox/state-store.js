@@ -1,6 +1,7 @@
 'use strict'
 
 const REDIS = require('redis')
+const uuidv4 = require('uuid/v4');
 const PREFIX = "c_"
 const ID_KEY = "c_ID"
 
@@ -32,23 +33,31 @@ class StateStore {
         )
     }
     
+    async nextKey() {
+        //return new Promise(function (resolve, reject) { resolve(uuidv4()) })
+        return uuidv4()
+    }
+    
     async close() {
       this.client.quit()
     }
 
     async put(data, expirationSeconds) {
+        console.log(`StateStore.put()`)
         const client = this.client
+        const nextKey = this.nextKey
         return new Promise(async function (resolve, reject) {
-            client.incr(ID_KEY, function(err, key) {
-                console.log(`Saving continuation ${key}, expires in ${expirationSeconds} seconds`)
+            nextKey().then(key => {
                 data._CONTINUATION = key
                 client.setex(key, expirationSeconds, JSON.stringify(data))
+                console.log(`Saved continuation ${key}, expires in ${expirationSeconds} seconds`)
                 resolve(key)
             });
         })
     }
     
     async get(key, callback) {
+        console.log(`StateStore.get(${key})`)
         const client = this.client
         return new Promise(async function (resolve, reject) {
             client.get(key, (err, data) => { 
