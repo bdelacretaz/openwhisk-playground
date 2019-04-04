@@ -148,7 +148,7 @@ const main = async function(params) {
     // Start a new execution on a state machine
     // and send response as the last step
     // TODO need better error handling
-    return new Promise(async function (resolve, reject) {
+    var result = new Promise(async function (resolve, reject) {
         const stateMachineInput = {
             version: VERSION,
             startTime: START_TIME,
@@ -163,11 +163,18 @@ const main = async function(params) {
                 return resolve( { body:data } )
             }
         }
-        
+
         const name = 'incsquare'
         console.log("Starting state machine")
         statebox.startExecution( stateMachineInput, name, {} )
     })
+
+    result.finally(function() {
+        console.log("Closing StateStore")
+        store.close()
+    })
+
+    return result;
 }
 
 if (require.main === module) {
