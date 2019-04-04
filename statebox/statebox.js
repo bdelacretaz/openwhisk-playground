@@ -122,7 +122,7 @@ const main = async function(params) {
     
     // Create module resources and run state machine
     await statebox.ready
-    statebox.createModuleResources(MODULE_RESOURCES)
+    await statebox.createModuleResources(MODULE_RESOURCES)
 
     // Select the state machine
     if(params.continuation && params.continuation.length > 0) {
@@ -155,7 +155,6 @@ const main = async function(params) {
                 value : input.values.input
             },
             success: function(data) {
-                store.close()
                 console.log(`RESPONSE:`)
                 console.log(data)
                 return resolve( { body:data } )
