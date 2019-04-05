@@ -1,7 +1,9 @@
 Statebox experiments
 ===
 
-Experimenting with https://github.com/wmfs/statebox in an OpenWhisk environment.
+Experimenting with https://github.com/wmfs/statebox in an OpenWhisk environment, to run state machines with continuations:
+a state machine can be paused, potentially for a long time, by saving its state in Redis. A continuation ID is output when
+that happens, allowing the state machine to be restarted from the same point and with the same context data later.
 
 To test this locally (requires a Redis server at localhost 6379) use:
 
