@@ -12,7 +12,7 @@ const StateStore = require('./state-store.js');
 const statebox = new Statebox({});
 let store;
 const EXPIRATION_SECONDS = 300;
-const VERSION = '1.09';
+const VERSION = '1.10';
 
 // Get suspend data, what must be saved
 // to restart the state machine after suspending

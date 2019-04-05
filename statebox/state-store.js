@@ -56,8 +56,8 @@ class StateStore {
         } else {
           resolve({ key, data: JSON.parse(data) });
         }
-      })
-    })
+      });
+    });
   }
 }
 
