@@ -3,10 +3,17 @@ Statebox experiments
 
 Experimenting with https://github.com/wmfs/statebox in an OpenWhisk environment.
 
-To test this locally use:
+To test this locally (requires a Redis server at localhost 6379) use:
 
     npm install
     node statebox.js 5
+    
+And to test the continuations feature, note the `_CONTINUATION` value that's output
+and call the script with that value as its second argument, such as
+
+    node statebox.js 0 34bcdb33-ee54-4efd-963c-4931fd3b3855
+    
+which restarts the state machine from where it was suspended.    
     
 Test as follows, on an OpenWhisk setup:
 
@@ -17,7 +24,13 @@ Test as follows, on an OpenWhisk setup:
     $ export URL=$(wsk -i action get statebox --url | grep http)
 
     $ curl -L -k "$URL?input=5"
+    
+or, to restart from a continuation as shown above:
+
+    $ export K=<continuation ID>
+    $ curl -s -L -k "$URL?continuation=$K"
 
 And then to see what happened:
 
     $ wsk -i activation get --last
+    $ wsk -i activation logs --last
