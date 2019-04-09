@@ -1,0 +1,69 @@
+OpenWhisk minimal Slack command example
+===
+
+This is a minimal example of a Slack command running on OpenWhisk - it returns an inspirational
+quote using the https://www.npmjs.com/package/inspirational-quotes module.
+
+Deploying and testing with curl
+---
+
+In their simplest form, that we are using here, Slack commands call a specified URL and 
+display the plain text response in the Slack client.
+
+So we first need to activate our OpenWhisk Web action so that it can be called with
+an HTTP request.
+
+Here's how to do that, assuming you have the `wsk` command correctly setup:
+
+    # Verify that wsk works
+    wsk list
+    
+    # Install our HTTP command handler
+    zip -r action.zip package.json *.js node_modules && wsk action update quote action.zip --web true --kind nodejs:10
+    
+    ...ok: updated action quote...
+    
+    # Get its URL and test with curl
+    export URL=$(wsk -i action get quote --url | grep http)
+    curl -L -k $URL
+    
+    ...outputs a random quote, author name in parentheses...
+    
+    # Test the short form (without author name)
+    curl -L -k "$URL?text=short"
+    
+    ...outputs a random quote, without the author name...
+    
+Slack setup
+---
+
+To setup our OpenWhisk Action as a Slack slash command, you need admin access to a Slack workspace.
+
+If needed, you can create such a workspace for free at https://slack.com/
+
+Once you have a workspace with admin rights:
+
+ * Create a Slack app from https://api.slack.com/apps?new_app=1
+ * View your Slack apps at https://api.slack.com/apps
+ * Create a command via https://api.slack.com/apps/<APP-ID>/slash-commands?
+ 
+ When you create the Slack command, you'll need to supply (in the Slack "Request URL" field) the URL 
+ that's output by the following OpenWhisk command, that we already used above:
+ 
+    wsk -i action get quote --url     
+    
+You'll need to give a name to your command (in the Slack "Command" field), for our tests we use `/quote`    
+    
+Usage in Slack
+---
+
+Once the commmand is installed, you can execute it from Slack by typing
+
+    /quote
+    
+To get a quote including the author's name, or
+
+    /quote short
+    
+To get just the text without the author's name.    
+    
