@@ -1,0 +1,27 @@
+{
+  "name": "slack-command",
+  "version": "1.0.0",
+  "description": "Minimal OpenWhisk Slack command demo",
+  "main": "slack-ping.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bdelacretaz/openwhisk-playground.git"
+  },
+  "keywords": [
+    "openwhisk",
+    "slack"
+  ],
+  "author": "Bertrand Delacretaz",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/bdelacretaz/openwhisk-playground/issues"
+  },
+  "homepage": "https://github.com/bdelacretaz/openwhisk-playground#readme",
+  "dependencies": {
+    "ping": "^0.2.2"
+  }
+}
