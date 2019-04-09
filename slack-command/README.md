@@ -29,10 +29,10 @@ Here's how to do that, assuming you have the `wsk` command correctly setup:
     
     ...outputs a random quote, author name in parentheses...
     
-    # Test the short form (without author name)
-    curl -L -k "$URL?text=short"
+    # Test the loud form
+    curl -L -k "$URL?text=loud"
     
-    ...outputs a random quote, without the author name...
+    ...outputs a random quote IN UPPERCASE to make it louder...
     
 Slack setup
 ---
