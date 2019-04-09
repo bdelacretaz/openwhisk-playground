@@ -2,7 +2,7 @@
   "name": "slack-command",
   "version": "1.0.0",
   "description": "Minimal OpenWhisk Slack command demo",
-  "main": "slack-quotes.js",
+  "main": "slack-eval.js",
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -22,6 +22,6 @@
   },
   "homepage": "https://github.com/bdelacretaz/openwhisk-playground#readme",
   "dependencies": {
-    "inspirational-quotes": "^1.0.5"
+    "jexl": "^2.1.1"
   }
 }
