@@ -12,7 +12,7 @@ function main (params) {
       console.log(q);
       let msg
       if(short) {
-          msg = q.text;
+          msg = q.text.toUpperCase();
       } else {
           msg = `${q.text} _(${q.author})_`;
       }
