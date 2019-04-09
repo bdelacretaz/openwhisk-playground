@@ -1,8 +1,8 @@
 OpenWhisk minimal Slack command example
 ===
 
-This is a minimal example of a Slack command running on OpenWhisk - it returns an inspirational
-quote using the https://www.npmjs.com/package/inspirational-quotes module.
+This is a minimal example of a Slack command running on OpenWhisk - it evaluates
+simple expressions using https://www.npmjs.com/package/jexl
 
 Deploying and testing with curl
 ---
@@ -19,20 +19,15 @@ Here's how to do that, assuming you have the `wsk` command correctly setup:
     wsk list
     
     # Install our HTTP command handler
-    zip -r action.zip package.json *.js node_modules && wsk action update quote action.zip --web true --kind nodejs:10
+    zip -r action.zip package.json *.js node_modules && wsk action update eval action.zip --web true --kind nodejs:10
     
-    ...ok: updated action quote...
+    ...ok: updated action eval...
     
     # Get its URL and test with curl
-    export URL=$(wsk -i action get quote --url | grep http)
-    curl -L -k $URL
+    export URL=$(wsk -i action get eval --url | grep http)
+    curl -L -k "$URL?text=2*3"
     
-    ...outputs a random quote, author name in parentheses...
-    
-    # Test the loud form
-    curl -L -k "$URL?text=loud"
-    
-    ...outputs a random quote IN UPPERCASE to make it louder...
+    ...outputs 6...
     
 Slack setup
 ---
@@ -51,20 +46,20 @@ Once you have a workspace with admin rights:
  When you create the Slack command, you'll need to supply (in the Slack "Request URL" field) the URL 
  that's output by the following OpenWhisk command, that we already used above:
  
-    wsk -i action get quote --url     
+    wsk -i action get eval --url     
     
-You'll need to give a name to your command (in the Slack "Command" field), for our tests we use `/quote`    
+You'll need to give a name to your command (in the Slack "Command" field), for our tests we use `/eval`    
     
 Usage in Slack
 ---
 
 Once the commmand is installed, you can execute it from Slack by typing
 
-    /quote
+    /eval
     
-To get a quote including the author's name, or
+To get a eval including the author's name, or
 
-    /quote short
+    /eval short
     
 To get just the text without the author's name.    
     
