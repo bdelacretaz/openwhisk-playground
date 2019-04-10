@@ -53,13 +53,8 @@ You'll need to give a name to your command (in the Slack "Command" field), for o
 Usage in Slack
 ---
 
-Once the commmand is installed, you can execute it from Slack by typing
+Once the commmand is installed, you can execute it from Slack by typing simple expressions like
 
-    /eval
-    
-To get a eval including the author's name, or
-
-    /eval short
-    
-To get just the text without the author's name.    
-    
+    /eval 2+3
+    /eval now
+  
