@@ -1,4 +1,4 @@
-// Minimal OpenWhisk Slack command that evaluates an expression using jexl
+// Example OpenWhisk Slack command that evaluates an expression using jexl
 
 const jexl = require('jexl');
 
