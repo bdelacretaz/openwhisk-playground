@@ -1,7 +1,9 @@
 /**
- * Hello world as an OpenWhisk Web action.
+ * Hello world (onn steroids, with QR code) as an OpenWhisk Web action.
  * See also https://github.com/apache/incubator-openwhisk/blob/master/docs/samples.md
  */
+
+const QRCode = require('qrcode')
 
 // Prevent XSS
 // From https://stackoverflow.com/questions/6234773/can-i-escape-html-special-chars-in-javascript
@@ -21,13 +23,16 @@ function escapeForHTML(text) {
   };
 
 // The actual OpenWhisk action code
-function main(params) {
+async function main(params) {
   const name = params.name || 'World';
+  const msg = `Hello, ${name}`;
+  const qrCodeDataURL = await QRCode.toDataURL(msg, {scale:10});
   
   const content = `
     <html>
       <body>
-        <h1>Hello, ${escapeForHTML(name)}!</h1>
+        <h1>${escapeForHTML(msg)}</h1>
+        <img style="width:50%; text-align:center;" src="${qrCodeDataURL}"></img>
       </body>
     </html>
     `;
