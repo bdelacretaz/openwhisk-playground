@@ -37,7 +37,7 @@ const talkToJira = async (config, issue) => {
 }
 
 const main = async (params) => {
-  console.log(JSON.stringify(params, null, 2))
+  //console.log(JSON.stringify(params, null, 2))
   const issue = params.issue
   if(issue) {
     return { body: talkToJira(params.jira, issue) }
