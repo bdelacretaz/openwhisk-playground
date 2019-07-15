@@ -13,7 +13,7 @@ Docs:
  
 Test as follows, on an OpenWhisk setup:
 
-    $ wsk -i action update car iceland-cars.js --web true
+    $ zip -r action.zip package.json node_modules iceland-cars.js && wsk action update car action.zip --web true --kind nodejs:10
     ok: created action car
     
     $ export URL=$(wsk -i action get car --url | grep http)
