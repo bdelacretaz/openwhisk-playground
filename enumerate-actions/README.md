@@ -5,7 +5,7 @@ Playing with wsk...
 Test as follows, on an OpenWhisk setup:
 
         $ zip -r action.zip package.json node_modules *.js \
-        && wsk action update enum action.zip --web true --kind nodejs:10 -a sling-foo .print.42
+        && wsk action update enum action.zip --web true --kind nodejs:10 -a provide-api-key true
     ok: created action enum
     
     $ export URL=$(wsk -i action get enum --url | grep http)
