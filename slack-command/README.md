@@ -18,6 +18,17 @@ Here's how to do that, assuming you have the `wsk` command correctly setup:
     # Verify that wsk works
     wsk list
     
+    # Install libs
+    npm install
+
+    # Test from the command line
+    $ node slack-eval.js 2+3
+    
+        request params: {
+          "text": "2+3"
+        }
+        2+3 = *5*
+    
     # Install our HTTP command handler
     zip -r action.zip package.json *.js node_modules && wsk action update eval action.zip --web true --kind nodejs:10
     
