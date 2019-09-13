@@ -6,6 +6,8 @@ This is based on [James Thomas' blog post on serverless and WebAssembly modules]
 It's the same code actually, with minor differences but I'm using a Docker image to build the WebAssembly code to
 avoid requiring a potentially complex installation for that - you just need Docker.
 
+It's a very simple example of calling a function written in C from JavaScript code, which can run with the standard Apche OpenWhisk NodeJS runtime. Adapting this to other languages that compile to WASM should be easy.
+
 Prerequisites
 ---
 Docker to run the WASM build - or see the build script if you have the Emscripten 
