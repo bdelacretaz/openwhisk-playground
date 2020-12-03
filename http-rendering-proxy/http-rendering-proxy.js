@@ -1,8 +1,8 @@
 function main (params) {
-  var path = "undefined __ow_path"
+  var path = "undefined params.__ow_path"
 
-  if (typeof __ow_path !== 'undefined') {
-    path = __ow_path
+  if (typeof params.__ow_path !== 'undefined') {
+    path = params.__ow_path
   }
 
   console.log(`path=${path}`)
