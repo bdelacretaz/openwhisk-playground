@@ -7,8 +7,9 @@ Meant to validate the setup, the code is _not really_ interesting...
 
 Test as follows, on an OpenWhisk setup:
 
-    $ export ORIGIN=http://48806b3fbf8e.ngrok.io/
-    $ zip -r action.zip package.json node_modules *.js && wsk action update hproxy action.zip --web true --kind nodejs:10 -p ORIGIN $ORIGIN
+    $ export ORIGIN=http://48806b3fbf8e.ngrok.io:80
+    $ export ROOT_URL=<URL of the OpenWhisk action>
+    $ zip -r action.zip package.json node_modules *.js && wsk action update hproxy action.zip --web true --kind nodejs:10 -p ORIGIN $ORIGIN -p ROOT_URL $ROOT_URL
     ok: created action hproxy
     
     $ export URL=$(wsk -i action get hproxy --url | grep http)
