@@ -2,7 +2,12 @@ var Handlebars = require('handlebars')
 
 // TODO for now this only works for 
 // content under content/articles
-var templateSource = '<div class="rendererOutput"><h3>{{title}}</h3>{{{text}}}</div>'
+var templateSource = '\
+  <div class="rendererOutput">\
+    <h3>{{title}}</h3>\
+    Path:{{path}}<br>\
+    {{{text}}}\
+  </div>'
 
 
 var template = Handlebars.compile(templateSource);
