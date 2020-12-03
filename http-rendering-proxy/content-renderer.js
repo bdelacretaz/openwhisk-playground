@@ -1,31 +1,65 @@
+// Renders content based on sling:resourceType values
+
 var Handlebars = require('handlebars')
 
-// TODO for now this only works for 
-// content under content/articles
-var templateSource = '\
-  <div class="rendererOutput">\
-    <h3>{{title}}</h3>\
-    Path:{{path}}<br>\
-    {{{text}}}\
-  </div>'
-
-
-var template = Handlebars.compile(templateSource);
-
-class ContentRenderer {
-    constructor() {
+class HandlebarsRenderer {
+    constructor(templateSrc) {
+        this.template = Handlebars.compile(templateSrc);
     }
 
+    render(content) { 
+        return this.template(content) 
+    }
+}
+
+var renderers = {}
+
+var DEFAULT_RENDERER = new HandlebarsRenderer('\
+    <h3>{{title}}</h3>\
+    This is the default renderer<br>\
+    <b>Path</b>:{{path}}<br>\
+    <b>sling:resourceType</b>:{{sling:resourceType}}<br>\
+    {{{text}}}\
+    ');
+
+renderers["samples/article"] = new HandlebarsRenderer('\
+      <h3>{{section}}: {{title}}</h3>\
+      <div><b>tags</b>:{{tags}}</div>\
+      <blockquote>{{{text}}}</blockquote>\
+    ');
+
+renderers["samples/section"] = new HandlebarsRenderer('This is the <b>{{name}}</b> section.')
+
+// Need to recurse in the content and dispatch to more renderers
+renderers["wknd/components/page"] = new HandlebarsRenderer('\
+    <h3>WKND page - TODO this renderer is very incomplete</h3>\
+    <div>tags: {{jcr:content.cq:tags}}</div>\
+    ');
+
+class ContentRenderer {
     info() {
-        return '\
-            For now, the content renderer only works for content that\'s under content/articles \
-            but the navigation should work everywhere'
+        return `The ContentRenderer only supports a limited set of sling:resourceType values: ${Object.keys(renderers)}`
+    }
+
+    getResourceType(content, supertype) {
+        var result = null;
+        var key = supertype ? "sling:resourceSuperType" : "sling:resourceType"
+        result = content[key]
+        if(!result && content["jcr:content"]) {
+            result = content["jcr:content"][key]
+        }
+        return result;
     }
 
     render(content) {
-        // TODO dispatch to the appropriate
-        // renderers based on the incoming sling:resourceType values
-        return template(content);
+        var renderer = renderers[this.getResourceType(content, false)]
+        if(!renderer) {
+            renderer = renderers[this.getResourceType(content, true)]
+        }
+        if(!renderer) {
+            renderer = DEFAULT_RENDERER
+        }
+        return renderer.render(content)
     }
 }
 

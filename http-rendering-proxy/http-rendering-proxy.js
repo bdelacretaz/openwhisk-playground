@@ -12,15 +12,15 @@ var templateSource = '\
   </head>\
   <body> \
   \
-  <h1>Sling Remote Content API proxying experiment</h1> \
-  <div class="tech">\
-  {{proxyInfo.contentRendererInfo}}<br>\
+  <h1>Sling Remote Content API :: HTTP proxying renderer</h1> \
+  <div class="debug">\
+  This is proxying content from a Sling instance at <a href="{{proxyInfo.origin}}">{{proxyInfo.origin}}</a>\
+  where the experimental <a href="https://github.com/apache/sling-whiteboard/tree/master/remote-content-api">Sling Remote Content API</a> must be installed.\
+  <br>Source code at <a href="https://github.com/bdelacretaz/openwhisk-playground/tree/master/http-rendering-proxy">http-rendering-proxy</a>\
   </div>\
   \
-  <div class="debug">\
-  This is proxying content from <a href="{{proxyInfo.origin}}">{{proxyInfo.origin}}</a>\
-  where the experimental <a href="https://github.com/apache/sling-whiteboard/tree/master/remote-content-api">Sling Remote Content API</a> should be installed.\
-  <br>Source code: <a href="https://github.com/bdelacretaz/openwhisk-playground/tree/master/http-rendering-proxy">http-rendering-proxy</a>\
+  <div class="tech">\
+  {{proxyInfo.contentRendererInfo}}<br>\
   </div>\
   \
   <div class="navigation">\
