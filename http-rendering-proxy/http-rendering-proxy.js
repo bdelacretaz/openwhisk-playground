@@ -9,6 +9,36 @@ var templateSource = '\
   <html>\
   <head>\
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">\
+  <style type="text/css">\
+    body{\
+      max-width: 9999px;\
+    }\
+    .debug {\
+      font-size:80%;\
+      color:gray;\
+    }\
+    ul {\
+      list-style-type: none;\
+    }\
+    .navigation li {\
+      margin:0;\
+      padding:0;\
+    }\
+    .content,\
+    .raw pre,\
+    .navigation {\
+      margin-left:2em;\
+    }\
+    .navigation {\
+      background-color: #CCFFFF;\
+    }\
+    .content {\
+      background-color: #FFFFCC;\
+    }\
+    .raw pre {\
+      background-color: #EEE;\
+    }\
+  </style>\
   </head>\
   <body> \
   \
@@ -16,18 +46,18 @@ var templateSource = '\
   <div class="debug">\
   This is proxying content from a Sling instance at <a href="{{proxyInfo.origin}}">{{proxyInfo.origin}}</a>\
   where the experimental <a href="https://github.com/apache/sling-whiteboard/tree/master/remote-content-api">Sling Remote Content API</a> must be installed.\
-  <br>Source code at <a href="https://github.com/bdelacretaz/openwhisk-playground/tree/master/http-rendering-proxy">http-rendering-proxy</a>\
-  </div>\
-  \
-  <div class="tech">\
+  <br>Source code at <a href="https://github.com/bdelacretaz/openwhisk-playground/tree/master/http-rendering-proxy">http-rendering-proxy</a><br>\
   {{proxyInfo.contentRendererInfo}}<br>\
   </div>\
   \
-  <div class="navigation">\
   <h2>Navigation</h2>\
+  <div class="navigation">\
   \
-  Parent: <a href="{{navigation.parent}}">{{navigation.parent}}</a><br>\
-  Children:\
+  Parent\
+  <ul>\
+  <li><a href="{{navigation.parent}}">{{navigation.parent}}</a></li>\
+  </ul>\
+  Children\
   <ul>\
     {{#each navigation.children}} \
     <li><a href="{{this.url}}">{{this.path}}</a></li>\
@@ -35,13 +65,14 @@ var templateSource = '\
   </ul>\
   </div>\
   \
-  <div class="content">\
   <h2>Rendered Content</h2>\
+  <div class="content">\
   {{{renderedContent}}}\
   \
   </div>\
-  <div class="debug">\
   <h2>Raw Content</h2>\
+  Acquired from <a href="{{proxyInfo.sourceURL}}">{{proxyInfo.sourceURL}}</a>\
+  <div class="raw">\
   <pre>{{rawJSON}}</pre>\
   </div>\
   </body></html>'
@@ -102,6 +133,7 @@ function main (params) {
       data.renderedContent = contentRenderer.render(data.content)
       data.proxyInfo = {
         origin : origin,
+        sourceURL : sourceURL,
         contentRendererInfo : contentRenderer.info()
       }
       var html = template(data);
