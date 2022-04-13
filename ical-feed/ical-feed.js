@@ -1,6 +1,6 @@
 // Based on the https://www.npmjs.com/package/ics example
 // Validate at https://icalendar.org/validator.html
-// Display at 
+// Display at https://larrybolt.github.io/online-ics-feed-viewer/
 const ics = require('ics')
 
 const getEvents = () => {
