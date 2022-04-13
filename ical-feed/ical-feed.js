@@ -16,7 +16,7 @@ const getEvents = () => {
       title: `Test for ${year}-${month}-${day}`,
       description: `Test event for ${year}-${month}-${day}`,
       location: 'Somewhere in Colorado',
-      url: 'http://grep.codeconsult.ch/',
+      url: 'https://github.com/bdelacretaz/openwhisk-playground/tree/master/ical-feed',
       geo: { lat: 40.0095, lon: 105.2669 },
       categories: ['iCal', 'Testing', 'JavaScript'],
       status: 'CONFIRMED',

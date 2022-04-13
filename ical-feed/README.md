@@ -12,9 +12,9 @@ To deploy to OpenWhisk, after setting up the `wsk` command
 for your environment:
 
     $ npm install
-    $ export ACTION=ical-feed
+    $ export ACTION=calendar.ics
     $ zip -r action.zip package.json node_modules $ACTION.js && wsk action update $ACTION action.zip --web true --kind nodejs:10
-    ok: created action ical-feed
+    ok: created action ...
     
     $ export URL=$(wsk -i action get $ACTION --url | grep http)
 
