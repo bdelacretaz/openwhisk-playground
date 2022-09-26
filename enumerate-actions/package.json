@@ -10,6 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "elapsed-time": "0.0.1",
-    "openwhisk": "^3.19.0"
+    "openwhisk": "^3.21.7"
   }
 }
